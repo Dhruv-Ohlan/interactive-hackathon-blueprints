@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Project Blueprint Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Strategic Calm -->
+    <!-- Application Structure Plan: The SPA uses a dashboard-style layout. The top section provides an overview and high-level comparison of the five projects. A central interactive bar chart allows users to visually compare projects by 'Winnability' and 'Feasibility' and to select a project for detailed review. Below this, a dynamic 'Project Deep Dive' section updates based on the user's selection, presenting detailed information in a clean, tabbed interface (Problem, Solution, Features, Market). This structure was chosen to facilitate non-linear exploration and direct comparison, empowering the user to quickly identify projects of interest and drill down for details without being overwhelmed by a long, static document. -->
+    <!-- Visualization & Content Choices: 
+        1. Project Comparison (Report Info: Winnability/Feasibility Scores -> Goal: Compare -> Viz: Grouped Bar Chart -> Interaction: Click bars to select project -> Justification: Ideal for comparing discrete scores across categories, provides visual navigation -> Library: Chart.js).
+        2. Technology Stacks (Report Info: Key Technologies -> Goal: Inform -> Viz: Styled tags with icons -> Interaction: None -> Justification: Clear, modern, space-efficient presentation of categorical data -> Library/Method: HTML/Tailwind).
+        3. Project Details (Report Info: All subsections per project -> Goal: Organize/Inform -> Viz: Tabbed interface -> Interaction: Click tabs to switch content view -> Justification: Manages content density, allows focused reading within a project -> Library/Method: HTML/Tailwind + JS).
+        4. Market Opportunity (Report Info: Market Size -> Goal: Inform -> Viz: Prominent stat card -> Interaction: None -> Justification: High-impact display for a key metric -> Library/Method: HTML/Tailwind).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 50vh;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .tab-button.active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .tech-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin: 0.25rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Venture-Grade Hackathon Blueprints</h1>
+            <p class="text-lg text-gray-600 max-w-3xl mx-auto">An interactive guide to five groundbreaking project concepts designed for market disruption and social impact.</p>
+        </header>
+
+        <main>
+            <section id="dashboard" class="bg-white p-6 rounded-2xl shadow-lg mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-1">Project Comparison Dashboard</h2>
+                <p class="text-gray-600 mb-6">This chart provides a high-level comparison of the five concepts based on their estimated hackathon "winnability" and technical feasibility. Click on any project's bars to explore its full blueprint below.</p>
+                <div class="chart-container">
+                    <canvas id="projectComparisonChart"></canvas>
+                </div>
+            </section>
+
+            <section id="project-selector" class="mb-8">
+                <div class="flex flex-wrap justify-center gap-3">
+                </div>
+            </section>
+
+            <section id="deep-dive" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg min-h-[500px]">
+                <div id="project-detail-content">
+                </div>
+            </section>
+        </main>
+
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            <p>Adapted from "Project Blueprints: Five Venture-Grade Hackathon Concepts".</p>
+            <p>Built for interactive exploration.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const projectsData = [
+                {
+                    id: 'cognitive-cadence',
+                    name: 'Cognitive Cadence',
+                    tagline: 'The AI/AR Co-pilot for Dementia Autonomy',
+                    winnability: 9,
+                    feasibility: 8,
+                    marketSize: '> $30B',
+                    technologies: ['AI', 'AR', 'IoT'],
+                    problem: {
+                        title: 'The Unaddressed Crisis: Beyond Memory Loss to Procedural Collapse',
+                        content: `The public discourse on dementia is overwhelmingly centered on memory loss. While this is a significant symptom, the more insidious and functionally debilitating challenge is the erosion of executive function and procedural memory—the brain's ability to sequence and execute multi-step tasks. This breakdown strips individuals of their autonomy and precipitates the move to expensive, full-time care. Current assistive technologies are tragically inadequate, offering blunt reminders rather than intelligent, adaptive guidance.`
+                    },
+                    solution: {
+                        title: 'The Dignity Dilemma & The "Digital Twin"',
+                        content: `A truly groundbreaking innovation must resolve the conflict between a caregiver's need for safety and a care recipient's right to privacy. Instead of invasive cameras, we propose a network of non-intrusive IoT sensors (contact, motion, smart plugs) to collect a rich dataset of daily life. A local AI model establishes a personalized behavioral baseline, detecting subtle deviations from the established rhythm of life. The output for the caregiver is not a video feed but a "Digital Twin" dashboard, presenting wellness metrics and data-driven summaries, preserving dignity while providing profound peace of mind.`
+                    },
+                    features: [
+                        { name: 'Context-Aware AR Procedural Guidance', description: 'Utilizes AR glasses or a smartphone to overlay simple, sequential visual prompts directly onto the user\'s field of view, acting as an external executive function to guide them through multi-step tasks like making coffee.' },
+                        { name: 'Ambient AI Anomaly Detection', description: 'A discreet network of low-cost IoT sensors feeds data to a local, on-device AI that builds a "digital twin" of daily routines. It detects meaningful anomalies in patterns—like missed meals or unusual sleep schedules—alerting caregivers to patterns of concern, not just single events.' },
+                        { name: 'Privacy-First "Digital Twin" Dashboard', description: 'Caregivers interact with a smartphone app that explicitly features no camera feeds. Instead, it presents synthesized wellness metrics like "Activity Level: Normal" or "Sleep Pattern: Consistent," providing crucial information while preserving the user\'s privacy.' }
+                    ],
+                    market: {
+                        title: 'Dual-Customer Market & Scalability',
+                        content: `The target audience is twofold: the person with early-stage cognitive decline who desires independence, and their caregiver (often a time-poor "sandwich generation" member) who needs peace of mind. The business model is a B2C subscription for the service and hardware, with powerful B2B potential through partnerships with home care agencies, assisted living corporations, and health insurers who are financially incentivized to delay higher levels of care.`
+                    }
+                },
+                {
+                    id: 'veritas',
+                    name: 'Veritas',
+                    tagline: 'The Decentralized Mental Wellness Economy',
+                    winnability: 8,
+                    feasibility: 8,
+                    marketSize: '> $100B',
+                    technologies: ['Blockchain', 'AI'],
+                    problem: {
+                        title: 'The Trust and Access Deficit in Mental Health',
+                        content: 'The U.S. mental health crisis is defined by two core barriers. First, the prohibitive cost of traditional therapy prices out millions, especially younger generations. Second, while digital wellness apps have emerged, they create a "trust deficit," requiring users to surrender their most sensitive data to centralized platforms with questionable privacy practices. This leaves a massive, underserved market of digitally native users who are aware of mental wellness but are financially constrained and deeply skeptical of corporate data handling.'
+                    },
+                    solution: {
+                        title: 'Creating a Market for Prevention with "Proof-of-Wellness"',
+                        content: 'The economic case for preventative mental healthcare is strong, but its value is not captured by the individual. A blockchain-based system can rewire this by creating a "Proof-of-Wellness" protocol. This smart contract algorithmically verifies the completion of a wellness activity (e.g., a meditation session verified by a wearable, a journal entry analyzed by on-device AI) and rewards the user with a real, tradable cryptographic token ($VRT). This creates a direct economic incentive, turning users from passive consumers into active producers of wellness value.'
+                    },
+                    features: [
+                        { name: '"Proof-of-Wellness" (PoW) Protocol', description: 'A novel blockchain system where users earn fungible tokens for engaging in verifiably completed preventative mental health activities. The protocol is extensible, supporting various verification methods like HealthKit integration or on-device AI analysis.' },
+                        { name: 'Decentralized Data Vault for Research', description: 'A strictly opt-in, privacy-preserving data marketplace. Users can encrypt and stake their anonymized wellness data. Researchers can pay to run encrypted queries against this aggregate data, with fees distributed directly to the data contributors, turning personal data into a monetizable asset.' },
+                        { name: 'DAO-Governed Care Ecosystem', description: 'The entire platform is governed by a Decentralized Autonomous Organization (DAO). Token holders vote on platform decisions and can allocate treasury funds to vet and accredit new, low-cost mental health services, creating a self-sustaining, community-governed ecosystem of care.' }
+                    ],
+                    market: {
+                        title: 'Targeting the Digital Native & Global Scalability',
+                        content: 'The primary audience is Gen Z and Millennials (18-35) who are digitally fluent, mental health aware, but financially constrained and privacy-conscious. The platform is inherently global and can scale to millions. The business model centers on small transaction fees from the data marketplace and services operating within the DAO ecosystem, targeting the massive global mental health market.'
+                    }
+                },
+                {
+                    id: 'symbiosis',
+                    name: 'Symbiosis',
+                    tagline: 'The Urban Micro-Grid for Climate & Carbon',
+                    winnability: 8,
+                    feasibility: 8,
+                    marketSize: '> $140B',
+                    technologies: ['IoT', 'Blockchain', 'AI'],
+                    problem: {
+                        title: 'The Sustainability Paradox of Urban Farming',
+                        content: 'Urban agriculture is championed for sustainability, but a landmark study revealed a startling paradox: its carbon footprint is, on average, six times greater than conventional farming. The root cause is the infrastructure (raised beds, irrigation) whose high embodied carbon is never amortized over the short lifespan of many urban farms. The isolated nature of these farms prevents "urban symbiosis"—the exchange of waste, water, and energy—making them ecologically and economically unviable.'
+                    },
+                    solution: {
+                        title: 'Monetizing Positive Externalities',
+                        content: 'The true value of an urban farm lies in its positive externalities—cooling effects, stormwater management, carbon sequestration—which are currently unpriced. We propose a system to quantify, tokenize, and monetize these benefits. IoT sensors measure the farm\'s real-time environmental impact. This verified data is fed to a blockchain system that mints "Urban Impact Credits" (UICs), a new tradable asset that corporations, developers, or city governments can buy to meet ESG goals, making urban farming profitable and net-positive.'
+                    },
+                    features: [
+                        { name: 'IoT-Powered Resource Exchange', description: 'A hyper-local mesh network of IoT sensors creates a real-time map of resource availability (water, energy, compost). An automated marketplace run on smart contracts facilitates peer-to-peer trading of these resources between buildings and farms.' },
+                        { name: 'Blockchain-Based Externality Marketplace', description: 'The core economic engine. Positive externalities (e.g., roof cooling, stormwater diversion) are measured by IoT sensors and verified by a trusted oracle, which triggers a smart contract to mint tradable Urban Impact Credits (UICs).' },
+                        { name: 'Predictive AI Optimization Engine', description: 'An AI engine analyzes data from the resource exchange and UIC marketplace to provide actionable guidance to farmers, helping them maximize both crop yield and environmental revenue (e.g., "Planting tomatoes has the highest projected value this season").' }
+                    ],
+                    market: {
+                        title: 'System-Level Stakeholders & Urban Scalability',
+                        content: 'Primary customers are urban real estate developers, REITs, and municipal planning departments facing pressure to meet ESG targets. Secondary users are the urban farmers themselves. The platform is highly scalable from a single block to an entire city. The business model is SaaS-based, with subscription fees for platform access and transaction fees on the resource and UIC marketplaces.'
+                    }
+                },
+                {
+                    id: 'kala',
+                    name: 'Kala',
+                    tagline: 'The Generative AI Language & Culture Incubator',
+                    winnability: 9,
+                    feasibility: 9,
+                    marketSize: '> 4 Billion People',
+                    technologies: ['Generative AI', 'Blockchain'],
+                    problem: {
+                        title: 'The Imminent Extinction of Digital Languages',
+                        content: 'Of the ~7,000 languages spoken today, fewer than 100 are "high-resource" in the digital age, leaving 4 billion people speaking languages invisible to modern tech. This digital chasm accelerates cultural erasure, cutting off younger generations from their heritage in the primary domains of education and commerce. This isn\'t just a cultural loss; it perpetuates global economic inequality, as literacy and access to information are directly tied to prosperity.'
+                    },
+                    solution: {
+                        title: 'Community-Owned AI for Economic Sovereignty',
+                        content: 'Centralized AI development cannot solve this. The solution is to empower linguistic communities to build, train, and *own* their own specialized language models. We propose a "Contribute-to-Earn" model on the blockchain. Native speakers use a mobile app to perform linguistic tasks (recording phrases, validating translations) and are rewarded with a community-specific token. This creates a self-sustaining economic loop where cultural preservation becomes an act of economic generation, with the resulting AI model owned by the community as a sovereign digital asset.'
+                    },
+                    features: [
+                        { name: 'Community-Owned Foundational Models', description: 'A no-code interface allows community leaders to manage language revitalization projects. The resulting fine-tuned language model is a digital public good, with ownership vested in a community-governed DAO.' },
+                        { name: 'Generative Multimodal Storytelling', description: 'Once a model is proficient, it unlocks generative AI tools. Community members can use their native tongue to co-create new content, like children\'s fables with culturally resonant illustrations, turning preservation into active cultural creation.' },
+                        { name: '"Contribute-to-Earn" Blockchain Protocol', description: 'The economic engine that solves the data problem. A tokenized incentive system on a low-fee blockchain rewards native speakers for data generation and validation tasks. Tokens can have real utility within the community, fostering a micro-economy.' }
+                    ],
+                    market: {
+                        title: 'Keepers of Culture & A New Data Economy',
+                        content: 'Primary users are indigenous groups, diaspora populations, and cultural preservation organizations. Secondary customers are educational non-profits, governments, and linguistic research institutions. The business model is a B2B/B2G SaaS platform licensed to organizations that sponsor language communities. A secondary model involves an ethical data-as-a-service offering, where a consortium of community models can license access to anonymized data, with revenue flowing back to the communities.'
+                    }
+                },
+                {
+                    id: 'civitas',
+                    name: 'Civitas',
+                    tagline: 'The Inclusive Urban Co-Design Platform',
+                    winnability: 7,
+                    feasibility: 7,
+                    marketSize: '> $13B',
+                    technologies: ['AR', 'AI', 'Blockchain'],
+                    problem: {
+                        title: 'The Exclusionary DNA of Urban Design',
+                        content: 'Our cities are often designed by a homogenous group of professionals for a narrow, default user, leading to inherently exclusionary environments. The needs of diverse populations (disabled people, the elderly, children) are often afterthoughts. Compounding this, traditional community engagement in urban planning is broken, failing to capture meaningful feedback and leaving residents feeling powerless. This lack of "Community Intelligence" leads to costly mistakes and public spaces that fail to serve the public.'
+                    },
+                    solution: {
+                        title: 'Quantifying the Qualitative Experience of Public Space',
+                        content: 'The breakthrough is to transform inclusive design from a qualitative art into a quantitative science. We propose an AI platform that simulates and measures how a diverse range of human "personas" (e.g., a wheelchair user, a person with low vision) would experience a proposed 3D design *before* it\'s built. The AI runs simulations and generates a detailed "Inclusivity Report," flagging specific, measurable failures with hard data (e.g., "Path from bus stop is 3.5x longer for Persona A"). This turns inclusivity into an objective, data-driven engineering problem.'
+                    },
+                    features: [
+                        { name: 'AR "Digital Twin" Sandbox', description: 'A mobile AR app empowers any resident to participate in design. They can view a proposed design as a 1:1 scale "digital twin" overlaid on their physical surroundings, walk through it, and leave geolocated, contextual feedback directly on the 3D model.' },
+                        { name: 'AI Persona Simulation Engine', description: 'Architects upload their 3D models to the platform and run simulations with a library of evidence-based digital personas. The engine analyzes millions of paths to produce an "Inclusivity Scorecard" and a heatmap identifying points of failure, stress, or exclusion.' },
+                        { name: 'Blockchain-Verified Community Consensus', description: 'All public feedback submitted through the AR app is recorded as a transaction on a public blockchain. This creates a permanent, tamper-proof, and auditable record of community sentiment, ensuring accountability in the development process.' }
+                    ],
+                    market: {
+                        title: 'The City Builders & A New Software Category',
+                        content: 'Primary customers are municipal governments (planning, public works) who need defensible data to justify design decisions and build community trust. Secondary customers are large architecture and engineering firms seeking a competitive differentiator. The model is a B2G/B2B SaaS platform licensed annually, creating a new, essential category of "Community Intelligence & Inclusivity Simulation" software.'
+                    }
+                }
+            ];
+
+            let activeProjectId = projectsData[0].id;
+            let myChart;
+
+            const projectSelectorContainer = document.querySelector('#project-selector .flex');
+            const projectDetailContainer = document.getElementById('project-detail-content');
+            
+            function getTechIcon(tech) {
+                switch(tech.toLowerCase()) {
+                    case 'ai': return '🧠';
+                    case 'ar': return '👓';
+                    case 'iot': return '📡';
+                    case 'blockchain': return '🔗';
+                    case 'generative ai': return '✨';
+                    default: return '💻';
+                }
+            }
+            
+            function getTechColor(tech) {
+                switch(tech.toLowerCase()) {
+                    case 'ai': return 'bg-indigo-100 text-indigo-800';
+                    case 'ar': return 'bg-purple-100 text-purple-800';
+                    case 'iot': return 'bg-sky-100 text-sky-800';
+                    case 'blockchain': return 'bg-emerald-100 text-emerald-800';
+                    case 'generative ai': return 'bg-rose-100 text-rose-800';
+                    default: return 'bg-gray-100 text-gray-800';
+                }
+            }
+
+            function renderProjectDetail(projectId) {
+                const project = projectsData.find(p => p.id === projectId);
+                if (!project) return;
+
+                const technologiesHtml = project.technologies.map(tech => 
+                    `<span class="tech-tag ${getTechColor(tech)}">${getTechIcon(tech)} ${tech}</span>`
+                ).join('');
+
+                projectDetailContainer.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 border-b border-gray-200 pb-6">
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800">${project.name}</h2>
+                            <p class="text-lg text-indigo-600 font-medium">${project.tagline}</p>
+                        </div>
+                        <div class="mt-4 md:mt-0 text-left md:text-right">
+                            <div class="text-2xl font-bold text-gray-700">${project.marketSize}</div>
+                            <div class="text-sm text-gray-500">Est. Market Opportunity</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Key Technologies</h3>
+                        <div>${technologiesHtml}</div>
+                    </div>
+
+                    <div class="mb-4 border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                            <button data-tab="problem" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">The Problem</button>
+                            <button data-tab="solution" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">The Solution</button>
+                            <button data-tab="features" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Features</button>
+                            <button data-tab="market" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Market & Scale</button>
+                        </nav>
+                    </div>
+
+                    <div id="tab-content" class="prose max-w-none text-gray-700">
+                        <div id="problem" class="content-section">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">${project.problem.title}</h3>
+                            <p>${project.problem.content}</p>
+                        </div>
+                        <div id="solution" class="content-section">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">${project.solution.title}</h3>
+                            <p>${project.solution.content}</p>
+                        </div>
+                        <div id="features" class="content-section">
+                            <ul class="space-y-4">
+                                ${project.features.map(f => `
+                                    <li>
+                                        <strong class="text-gray-800">${f.name}:</strong> ${f.description}
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                        <div id="market" class="content-section">
+                            <h3 class="text-xl font-semibold text-gray-800 mb-2">${project.market.title}</h3>
+                            <p>${project.market.content}</p>
+                        </div>
+                    </div>
+                `;
+                setupTabs(projectId);
+            }
+
+            function setupTabs(projectId) {
+                const tabButtons = document.querySelectorAll(`#project-detail-content .tab-button`);
+                const contentSections = document.querySelectorAll(`#project-detail-content .content-section`);
+
+                function setActiveTab(tabId) {
+                    tabButtons.forEach(button => {
+                        button.classList.toggle('active', button.dataset.tab === tabId);
+                    });
+                    contentSections.forEach(section => {
+                        section.classList.toggle('active', section.id === tabId);
+                    });
+                }
+
+                tabButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        setActiveTab(button.dataset.tab);
+                    });
+                });
+                
+                setActiveTab('problem');
+            }
+
+            function updateActiveProject(newProjectId) {
+                activeProjectId = newProjectId;
+                renderProjectDetail(activeProjectId);
+                updateNavButtons();
+                highlightChartBar(activeProjectId);
+            }
+
+            function updateNavButtons() {
+                const navButtons = document.querySelectorAll('#project-selector .nav-button');
+                navButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.projectId === activeProjectId);
+                });
+            }
+            
+            function highlightChartBar(projectId) {
+                if (!myChart) return;
+                const projectIndex = projectsData.findIndex(p => p.id === projectId);
+                
+                myChart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const backgroundColors = dataset.data.map((_, i) => {
+                        if (i === projectIndex) {
+                            return datasetIndex === 0 ? 'rgba(79, 70, 229, 1)' : 'rgba(129, 140, 248, 1)';
+                        }
+                        return datasetIndex === 0 ? 'rgba(79, 70, 229, 0.5)' : 'rgba(129, 140, 248, 0.5)';
+                    });
+                     const borderColors = dataset.data.map((_, i) => {
+                        if (i === projectIndex) {
+                            return datasetIndex === 0 ? 'rgba(79, 70, 229, 1)' : 'rgba(129, 140, 248, 1)';
+                        }
+                        return datasetIndex === 0 ? 'rgba(79, 70, 229, 0.5)' : 'rgba(129, 140, 248, 0.5)';
+                    });
+                    dataset.backgroundColor = backgroundColors;
+                    dataset.borderColor = borderColors;
+                });
+                myChart.update();
+            }
+
+            function renderNavButtons() {
+                projectSelectorContainer.innerHTML = '';
+                projectsData.forEach(project => {
+                    const button = document.createElement('button');
+                    button.textContent = project.name;
+                    button.dataset.projectId = project.id;
+                    button.className = 'nav-button px-4 py-2 rounded-full text-sm font-semibold bg-white text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50';
+                    button.addEventListener('click', () => {
+                        updateActiveProject(project.id);
+                    });
+                    projectSelectorContainer.appendChild(button);
+                });
+                updateNavButtons();
+            }
+
+            function renderChart() {
+                const ctx = document.getElementById('projectComparisonChart').getContext('2d');
+                const labels = projectsData.map(p => p.name);
+                const winnabilityData = projectsData.map(p => p.winnability);
+                const feasibilityData = projectsData.map(p => p.feasibility);
+
+                myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'Winnability Score',
+                                data: winnabilityData,
+                                backgroundColor: 'rgba(79, 70, 229, 0.5)',
+                                borderColor: 'rgba(79, 70, 229, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4,
+                            },
+                            {
+                                label: 'Feasibility Score',
+                                data: feasibilityData,
+                                backgroundColor: 'rgba(129, 140, 248, 0.5)',
+                                borderColor: 'rgba(129, 140, 248, 1)',
+                                borderWidth: 1,
+                                borderRadius: 4,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 10,
+                                grid: {
+                                    color: '#e5e7eb',
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false,
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                        },
+                        onClick: (event, elements) => {
+                            if (elements.length > 0) {
+                                const projectIndex = elements[0].index;
+                                const projectId = projectsData[projectIndex].id;
+                                updateActiveProject(projectId);
+                            }
+                        }
+                    }
+                });
+                highlightChartBar(activeProjectId);
+            }
+
+            renderNavButtons();
+            renderProjectDetail(activeProjectId);
+            renderChart();
+        });
+    </script>
+</body>
+</html>
