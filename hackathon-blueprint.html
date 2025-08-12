@@ -19,10 +19,59 @@
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body {
+         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6f7ff 100%);
             color: #343a40;
+            min-height: 100vh;
+            scroll-behavior: smooth;
+            transition: background-color 0.3s, color 0.3s;
+            padding-top: 60px;
+        }
+        body.dark-mode {
+            background: linear-gradient(135deg, #0a0a15 0%, #0c0c1a 100%);
+            color: #e2e8f0;
+        }
+        .background-decoration {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            overflow: hidden;
+            transition: transform 0.5s ease;
+        }
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.15;
+            transform: translateZ(0);
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .circle-1 {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(45deg, #4f46e5, #7dd3fc);
+            top: -100px;
+            right: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+        .circle-2 {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(45deg, #818cf8, #c084fc);
+            bottom: -50px;
+            left: 10%;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+        .circle-3 {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(45deg, #c084fc, #f472b6);
+            top: 20%;
+            right: 20%;
+            animation: float 12s ease-in-out infinite;
         }
         .chart-container {
             position: relative;
@@ -40,11 +89,24 @@
         }
         .nav-button {
             transition: all 0.3s ease;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
         }
         .nav-button.active {
             background-color: #4f46e5;
             color: white;
             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .tab-button {
+            transition: all 0.2s ease;
+        }
+        .tab-button:hover {
+            color: #4f46e5;
+            background-color: #f1f5ff;
         }
         .tab-button.active {
             border-color: #4f46e5;
@@ -62,48 +124,257 @@
             align-items: center;
             padding: 0.25rem 0.75rem;
             border-radius: 9999px;
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             font-weight: 500;
             margin: 0.25rem;
+            transition: all 0.2s ease;
         }
+        @media (min-width: 640px) {
+            .tech-tag {
+                font-size: 0.875rem;
+            }
+        }
+        .tech-tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .project-card {
+            transition: all 0.3s ease;
+            scroll-margin-top: 20px;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            color: #343a40;
+        }
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.35);
+        }
+        .footer-link {
+            transition: all 0.2s ease;
+        }
+        .footer-link:hover {
+            color: #4f46e5;
+            text-decoration: underline;
+        }
+        .header-title {
+            transition: all 0.3s ease;
+        }
+        .header-title:hover {
+            color: #4f46e5;
+        }
+        /* Dark mode styles */
+        body.dark-mode .project-card {
+            background: rgba(30, 30, 40, 0.7);
+            border: 1px solid rgba(80, 80, 120, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            color: #e2e8f0;
+        }
+        body.dark-mode .project-card:hover {
+            background: rgba(40, 40, 60, 0.8);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+        body.dark-mode #dashboard,
+        body.dark-mode #deep-dive {
+            background: rgba(30, 30, 40, 0.7);
+            color: #e2e8f0;
+        }
+        body.dark-mode .nav-button {
+            background-color: #2d2d3a;
+            color: #cbd5e1;
+            border-color: #4a4a5a;
+        }
+        body.dark-mode .nav-button:hover {
+            background-color: #3a3a4a;
+        }
+        body.dark-mode .nav-button.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        body.dark-mode .tab-button {
+            color: #cbd5e1;
+        }
+        body.dark-mode .tab-button:hover {
+            color: #4f46e5;
+            background-color: #2d2d3a;
+        }
+        body.dark-mode .tab-button.active {
+            border-color: #4f46e5;
+            color: #4f46e5;
+            background-color: #2d2d3a;
+        }
+        body.dark-mode .tech-tag {
+            background: rgba(50, 50, 70, 0.8);
+            color: #cbd5e1;
+        }
+        body.dark-mode .footer-link {
+            color: #94a3b8;
+        }
+        body.dark-mode .footer-link:hover {
+            color: #4f46e5;
+        }
+        body.dark-mode .header-title {
+            color: #e2e8f0;
+        }
+        body.dark-mode .header-title:hover {
+            color: #4f46e5;
+        }
+        /* Additional dark mode text color overrides */
+        body.dark-mode .text-gray-800,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-indigo-600,
+        body.dark-mode .text-gray-400 {
+            color: #e2e8f0 !important;
+        }
+        body.dark-mode .prose strong {
+            color: #e2e8f0 !important;
+        }
+        body.dark-mode .border-gray-200 {
+            border-color: #4a5568 !important;
+        }
+        /* Dark mode toggle button */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+        .dark-mode-toggle:hover {
+            background: #3730a3;
+            transform: translateY(-2px);
+        }
+        body.dark-mode .dark-mode-toggle {
+            background: #7e7dee;
+        }
+        body.dark-mode .dark-mode-toggle:hover {
+            background: #6366f1;
+        }
+       
     </style>
 </head>
 <body class="antialiased">
+    <script>
+        // Parallax effect for background circles
+        document.addEventListener('DOMContentLoaded', function() {
+            const circles = document.querySelectorAll('.circle');
+            
+            window.addEventListener('scroll', function() {
+                const scrollY = window.scrollY;
+                
+                circles.forEach((circle, index) => {
+                    // Different movement speeds for each circle
+                    const speed = 0.1 + (index * 0.05);
+                    const yPos = -(scrollY * speed);
+                    circle.style.transform = `translateY(${yPos}px)`;
+                });
+            });
+        });
+    </script>
+    <div class="background-decoration">
+        <div class="circle circle-1"></div>
+        <div class="circle circle-2"></div>
+        <div class="circle circle-3"></div>
+    </div>
 
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">Venture-Grade Hackathon Blueprints</h1>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto">An interactive guide to five groundbreaking project concepts designed for market disruption and social impact.</p>
+        <header class="text-center mb-6 sm:mb-10">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-2 header-title">Venture-Grade Hackathon Blueprints</h1>
+            <p class="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto typing-text"></p>
         </header>
 
         <main>
-            <section id="dashboard" class="bg-white p-6 rounded-2xl shadow-lg mb-8">
-                <h2 class="text-2xl font-bold text-gray-800 mb-1">Project Comparison Dashboard</h2>
-                <p class="text-gray-600 mb-6">This chart provides a high-level comparison of the five concepts based on their estimated hackathon "winnability" and technical feasibility. Click on any project's bars to explore its full blueprint below.</p>
+            <section id="dashboard" class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg mb-6 sm:mb-8 project-card">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1">Project Comparison Dashboard</h2>
+                <p class="text-gray-600 text-sm sm:text-base mb-4">This chart provides a high-level comparison of the five concepts based on their estimated hackathon "winnability" and technical feasibility. Click on any project's bars to explore its full blueprint below.</p>
                 <div class="chart-container">
                     <canvas id="projectComparisonChart"></canvas>
                 </div>
             </section>
 
-            <section id="project-selector" class="mb-8">
-                <div class="flex flex-wrap justify-center gap-3">
+            <section id="project-selector" class="mb-6 sm:mb-8">
+                <div class="flex flex-wrap justify-center gap-2 sm:gap-3">
                 </div>
             </section>
 
-            <section id="deep-dive" class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg min-h-[500px]">
+            <section id="deep-dive" class="bg-white p-4 sm:p-6 rounded-2xl shadow-lg min-h-[400px] sm:min-h-[500px] project-card">
                 <div id="project-detail-content">
                 </div>
             </section>
         </main>
 
-        <footer class="text-center mt-12 text-gray-500 text-sm">
+        <footer class="text-center mt-8 sm:mt-12 text-gray-500 text-sm">
             <p>Adapted from "Project Blueprints: Five Venture-Grade Hackathon Concepts".</p>
             <p>Built for interactive exploration.</p>
+            <p class="mt-2">
+                <a href="#" class="footer-link">Privacy Policy</a> | 
+                <a href="#" class="footer-link">Terms of Use</a> | 
+                <a href="#" class="footer-link">Contact</a>
+            </p>
         </footer>
     </div>
 
     <script>
+        // Typing animation for subtitle
+        document.addEventListener('DOMContentLoaded', function() {
+            const textElement = document.querySelector('.typing-text');
+            const text = "An interactive guide to five groundbreaking project concepts designed for market disruption and social impact.";
+            let index = 0;
+            
+            function type() {
+                if (index < text.length) {
+                    textElement.textContent += text.charAt(index);
+                    index++;
+                    setTimeout(type, 20); // Adjust typing speed here
+                }
+            }
+            
+            // Start typing after a short delay
+            setTimeout(type, 500);
+        });
+
+        // Dark mode toggle functionality
         document.addEventListener('DOMContentLoaded', function () {
+            // Create dark mode toggle button
+            const toggleButton = document.createElement('button');
+            toggleButton.className = 'dark-mode-toggle';
+            toggleButton.innerHTML = '🌓';
+            document.body.appendChild(toggleButton);
+
+            // Check for saved preference
+            const savedMode = localStorage.getItem('darkMode');
+            if (savedMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                toggleButton.innerHTML = '☀️';
+            }
+
+            // Toggle dark mode
+            toggleButton.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('darkMode', 'enabled');
+                    toggleButton.innerHTML = '☀️';
+                } else {
+                    localStorage.setItem('darkMode', null);
+                    toggleButton.innerHTML = '🌓';
+                }
+            });
+
             const projectsData = [
                 {
                     id: 'cognitive-cadence',
@@ -285,17 +556,17 @@
                         </div>
                     </div>
 
-                    <div class="mb-6">
+                    <div class="mb-4">
                         <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Key Technologies</h3>
-                        <div>${technologiesHtml}</div>
+                        <div class="flex flex-wrap">${technologiesHtml}</div>
                     </div>
 
                     <div class="mb-4 border-b border-gray-200">
-                        <nav class="-mb-px flex space-x-6" aria-label="Tabs">
-                            <button data-tab="problem" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">The Problem</button>
-                            <button data-tab="solution" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">The Solution</button>
-                            <button data-tab="features" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Features</button>
-                            <button data-tab="market" class="tab-button whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Market & Scale</button>
+                        <nav class="-mb-px flex flex-wrap gap-1 sm:gap-0 sm:space-x-6" aria-label="Tabs">
+                            <button data-tab="problem" class="tab-button whitespace-nowrap py-2 px-1 sm:py-3 sm:px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">The Problem</button>
+                            <button data-tab="solution" class="tab-button whitespace-nowrap py-2 px-1 sm:py-3 sm:px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">The Solution</button>
+                            <button data-tab="features" class="tab-button whitespace-nowrap py-2 px-1 sm:py-3 sm:px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Features</button>
+                            <button data-tab="market" class="tab-button whitespace-nowrap py-2 px-1 sm:py-3 sm:px-1 border-b-2 font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">Market & Scale</button>
                         </nav>
                     </div>
 
@@ -418,6 +689,9 @@
                                 borderColor: 'rgba(79, 70, 229, 1)',
                                 borderWidth: 1,
                                 borderRadius: 4,
+                                hoverBackgroundColor: 'rgba(79, 70, 229, 0.7)',
+                                hoverBorderColor: 'rgba(79, 70, 229, 1)',
+                                hoverBorderWidth: 2
                             },
                             {
                                 label: 'Feasibility Score',
@@ -426,12 +700,19 @@
                                 borderColor: 'rgba(129, 140, 248, 1)',
                                 borderWidth: 1,
                                 borderRadius: 4,
+                                hoverBackgroundColor: 'rgba(129, 140, 248, 0.7)',
+                                hoverBorderColor: 'rgba(129, 140, 248, 1)',
+                                hoverBorderWidth: 2
                             }
                         ]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: {
+                            duration: 300,
+                            easing: 'easeOutQuart'
+                        },
                         scales: {
                             y: {
                                 beginAtZero: true,
@@ -453,6 +734,9 @@
                             tooltip: {
                                 mode: 'index',
                                 intersect: false,
+                                animation: {
+                                    duration: 200
+                                }
                             },
                         },
                         onClick: (event, elements) => {
@@ -461,8 +745,70 @@
                                 const projectId = projectsData[projectIndex].id;
                                 updateActiveProject(projectId);
                             }
+                        },
+                        onHover: (event, elements) => {
+                            if (elements.length > 0) {
+                                event.native.target.style.cursor = 'pointer';
+                            } else {
+                                event.native.target.style.cursor = 'default';
+                            }
                         }
-                    }
+                    },
+                    plugins: [{
+                        id: 'barHoverAnimation',
+                        beforeDatasetsDraw(chart) {
+                            const { ctx, tooltip, chartArea: { top, bottom, left, right, width, height } } = chart;
+                            
+                            if (tooltip._active.length > 0) {
+                                const activeElement = tooltip._active[0];
+                                const datasetIndex = activeElement.datasetIndex;
+                                const index = activeElement.index;
+                                
+                                chart.data.datasets.forEach((dataset, dIndex) => {
+                                    const barElement = chart.getDatasetMeta(dIndex).data[index];
+                                    if (barElement) {
+                                        // Save original properties
+                                        if (!barElement.$saved) {
+                                            barElement.$saved = {
+                                                y: barElement.y,
+                                                base: barElement.base
+                                            };
+                                        }
+                                        
+                                        // Animate the hovered bar
+                                        if (dIndex === datasetIndex) {
+                                            const progress = Math.min(1, (Date.now() - (barElement.$animationStart || 0)) / 300);
+                                            if (!barElement.$animationStart) {
+                                                barElement.$animationStart = Date.now();
+                                            }
+                                            
+                                            const displacement = -10 * progress;
+                                            barElement.y = barElement.$saved.y + displacement;
+                                        } else {
+                                            // Reset non-hovered bars
+                                            if (barElement.$saved) {
+                                                barElement.y = barElement.$saved.y;
+                                            }
+                                        }
+                                    }
+                                });
+                            } else {
+                                // Reset all bars when not hovering
+                                chart.data.datasets.forEach(dataset => {
+                                    dataset.data.forEach((_, index) => {
+                                        const meta = chart.getDatasetMeta(chart.data.datasets.indexOf(dataset));
+                                        if (meta && meta.data && meta.data[index]) {
+                                            const barElement = meta.data[index];
+                                            if (barElement && barElement.$saved) {
+                                                barElement.y = barElement.$saved.y;
+                                                delete barElement.$animationStart;
+                                            }
+                                        }
+                                    });
+                                });
+                            }
+                        }
+                    }]
                 });
                 highlightChartBar(activeProjectId);
             }
